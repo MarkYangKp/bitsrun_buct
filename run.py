@@ -13,6 +13,8 @@ BitSRun_BUCT - 深澜校园网自动认证工具 - 北京化工大学特供版�
     --server URL        指定认证服务器地址
     -v, --verbose       显示详细日志
     -q, --quiet         仅显示错误信息
+    -g, --guard         启用认证守卫模式
+    -i, --interval SECS 守卫模式检查间隔(秒)
 """
 
 import sys
@@ -34,6 +36,12 @@ def parse_arguments():
     parser.add_argument('-t', '--type', help='指定运营商类型 (如: cmcc, unicom)')
     
     parser.add_argument('--server', help='指定认证服务器地址')
+    
+    # 守卫模式
+    parser.add_argument('-g', '--guard', action='store_true',
+                      help='启用认证守卫模式，定期检查登录状态')
+    parser.add_argument('-i', '--interval', type=int, default=300,
+                      help='守卫模式检查间隔(秒), 默认为300秒')
     
     # 日志级别
     log_group = parser.add_mutually_exclusive_group()
@@ -95,7 +103,11 @@ def main():
             client.server_url = args.server
         
         # 执行登录流程
-        client.run()
+        if args.guard:
+            logger.info(f"启动认证守卫模式，检查间隔：{args.interval}秒")
+            client.guard(interval_seconds=args.interval)
+        else:
+            client.run()
         
     except KeyboardInterrupt:
         logger.info("程序被用户中断")

@@ -368,3 +368,44 @@ class BitSRun:
         else:
             self.logger.error("登录失败，请检查配置和网络")
             return False
+    
+    def guard(self, interval_seconds=300):
+        """
+        认证守卫模式，定期检查登录状态，在需要时进行自动登录
+        
+        参数:
+            interval_seconds (int): 检查间隔，单位为秒
+        """
+        self.logger.info(f"认证守卫已启动，每 {interval_seconds} 秒检查一次登录状态")
+        
+        try:
+            while True:
+                # 记录当前时间
+                check_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                self.logger.info(f"[{check_time}] 开始检查登录状态")
+                
+                # 获取IP地址(每次都刷新获取，避免IP变化问题)
+                if not self.get_ip():
+                    self.logger.error("获取IP地址失败，将在下次继续尝试")
+                    time.sleep(interval_seconds)
+                    continue
+                
+                # 检查在线状态
+                if self.check_online():
+                    self.logger.info("当前已在线，保持连接")
+                else:
+                    self.logger.warning("当前未登录或连接已断开，尝试重新登录")
+                    if self.login():
+                        self.logger.info("自动重新登录成功")
+                    else:
+                        self.logger.error("自动重新登录失败，将在下次继续尝试")
+                
+                # 等待到下一次检查
+                self.logger.info(f"下次检查将在 {interval_seconds} 秒后进行")
+                time.sleep(interval_seconds)
+        
+        except KeyboardInterrupt:
+            self.logger.info("认证守卫被用户手动停止")
+        except Exception as e:
+            self.logger.error(f"认证守卫发生异常: {str(e)}")
+            raise
