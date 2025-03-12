@@ -9,6 +9,7 @@ BitSRun_BUCT 是一个北京化工大学特供版的用于自动完成深澜(sru
 - 适用于不同运营商网络
 - 跨平台支持 (Windows, Linux, macOS, ESP32等)
 - 配置灵活，使用方便
+- 支持守卫模式，自动检查并保持网络连接
 
 ## 安装方法
 
@@ -44,6 +45,8 @@ python run.py
 - `--server`: 指定认证服务器地址
 - `-v, --verbose`: 显示详细日志
 - `-q, --quiet`: 仅显示错误信息
+- `-g, --guard`: 启用认证守卫模式
+- `-i, --interval`: 守卫模式检查间隔(秒)，默认300秒
 
 ### 示例
 ```bash
@@ -58,12 +61,45 @@ python run.py -t cmcc
 
 # 使用自定义配置文件
 python run.py -c my_config.ini
+
+# 启用守卫模式(每5分钟检查一次)
+python run.py -g
+
+# 启用守卫模式并自定义检查间隔(每60秒检查一次)
+python run.py -g -i 60
+
+# 启用守卫模式并指定自定义用户
+python run.py -g -u student123 -p password123 -t cmcc
 ```
+
+### 守卫模式
+
+守卫模式是一项持续运行的功能，可定期检查网络连接状态并在断开时自动重新连接。适用于以下场景：
+
+- 网络环境不稳定需要保持持续连接
+- 校园网认证经常自动断开
+- 长时间需要保持在线状态
+
+可通过两种方式启用守卫模式：
+
+1. **命令行参数**：使用 `-g` 参数启动程序
+2. **配置文件**：在 `config.ini` 的 `[Guard]` 部分设置 `enable = true`
+
+守卫模式检查间隔可以通过以下方式设置：
+
+1. **命令行参数**：使用 `-i SECONDS` 参数（如 `-i 120` 表示2分钟）
+2. **配置文件**：在 `config.ini` 的 `[Guard]` 部分设置 `interval = 秒数`
 
 ## 服务自动化
 
 ### Windows计划任务
 可通过Windows任务计划程序设置定时运行，确保网络保持连接。
+
+对于需要长期保持连接的情况，建议使用守卫模式：
+```bash
+# 在后台启动守卫模式（需要在Windows中安装pythonw）
+pythonw run.py -g -i 300
+```
 
 ### Linux Cron任务
 在Linux系统上，可以添加cron任务实现自动运行：
@@ -71,6 +107,9 @@ python run.py -c my_config.ini
 ```bash
 # 每小时检查并登录
 0 * * * * cd /path/to/bitsrun_buct && python run.py
+
+# 或者在启动时以守卫模式运行
+@reboot cd /path/to/bitsrun_buct && python run.py -g -i 300 > /dev/null 2>&1
 ```
 
 ## 故障排除
