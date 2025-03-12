@@ -103,9 +103,13 @@ def main():
             client.server_url = args.server
         
         # 执行登录流程
-        if args.guard:
-            logger.info(f"启动认证守卫模式，检查间隔：{args.interval}秒")
-            client.guard(interval_seconds=args.interval)
+        # 命令行参数 -g 优先于配置文件中的守卫模式设置
+        use_guard = args.guard or client.guard_enable
+        if use_guard:
+            # 命令行指定的间隔优先于配置文件
+            interval = args.interval if args.guard else client.guard_interval
+            logger.info(f"启动认证守卫模式，检查间隔：{interval}秒")
+            client.guard(interval_seconds=interval)
         else:
             client.run()
         

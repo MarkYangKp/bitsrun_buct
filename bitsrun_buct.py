@@ -87,6 +87,10 @@ class BitSRun:
         self.double_stack = config.get('Parameters', 'double_stack', fallback='0')
         self.info_prefix = config.get('Parameters', 'info_prefix', fallback='SRBX1')
         
+        # 守卫模式配置
+        self.guard_enable = config.getboolean('Guard', 'enable', fallback=False)
+        self.guard_interval = config.getint('Guard', 'interval', fallback=300)
+        
         # 请求头
         self.headers = {
             'User-Agent': config.get(
